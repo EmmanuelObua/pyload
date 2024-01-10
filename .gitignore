@@ -1,0 +1,10 @@
+.env
+pyload.log
+datatata
+venv
+__pycache__
+
+cdrs/postauth/*
+# !cdrs/postauth
+cdrs/loaded/*
+# !cdrs/loaded
