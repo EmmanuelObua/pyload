@@ -68,8 +68,22 @@ def process_zip_file(zip_file_path, temp_dir, folder, ext='.zip'):
 		print(f"Error: {e}")
 
 def list_folders(directory_path, excluded_folder):
-	folders = [folder for folder in os.listdir(directory_path) if os.path.isdir(os.path.join(directory_path, folder)) and folder != excluded_folder]
-	return folders
+    """
+    Lists folders in the specified directory, excluding a specified folder.
+
+    Args:
+        directory_path (str): The path to the directory.
+        excluded_folder (str): The folder to exclude from the list.
+
+    Returns:
+        list: A list of folder names.
+    """
+    folders = [
+        folder
+        for folder in os.listdir(directory_path)
+        if os.path.isdir(os.path.join(directory_path, folder)) and folder != excluded_folder
+    ]
+    return folders
 
 def load(env):
 
