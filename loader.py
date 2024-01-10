@@ -10,6 +10,7 @@ import random
 import string
 import constants
 import logging
+from typing import Tuple, Optional
 
 # Configure logging to a file
 logging.basicConfig(filename='pyload.log', level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -27,18 +28,27 @@ def generate_random_string(length: int = 8) -> str:
     characters = string.ascii_letters + string.digits
     return ''.join(random.choice(characters) for _ in range(length))
 
-def get_file_info(folder_name):
+def get_file_info(folder_name: str) -> Tuple[Optional[list], Optional[str]]:
+    """
+    Retrieve column names and table name information for a given folder.
 
-	file_types_info = {
-		'postauth': {
-			'column_names': constants.postauth,
-			'table_name': 'postauth'
-		},
-	}
+    Parameters:
+    - folder_name (str): The name of the folder.
 
-	info = file_types_info.get(folder_name, {'column_names': None, 'table_name': None})
+    Returns:
+    - Tuple[Optional[list], Optional[str]]: A tuple containing column names and table name information.
+      Returns (None, None) if the folder name is not recognized.
+    """
+    file_types_info = {
+        'postauth': {
+            'column_names': constants.postauth,
+            'table_name': 'postauth'
+        },
+    }
 
-	return info['column_names'], info['table_name']
+    info = file_types_info.get(folder_name, {'column_names': None, 'table_name': None})
+
+    return info['column_names'], info['table_name']
 
 def process_zip_file(zip_file_path, temp_dir, folder, ext='.zip'):
 
