@@ -1,6 +1,7 @@
 # Python CDR Loader
 
 - Create a python virtual environment `python -m venv venv`
+- Activate the venv `venv\Scripts\activate.bat` for windows
 - Install the dependencies `pip install`
 - Loaded the cdrs in the cdrs/postauth directory for example
 - Create a .env file in the root directory and copy the content from .env.local and populate the variable accordingly
