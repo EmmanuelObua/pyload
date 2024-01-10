@@ -4,7 +4,5 @@ datatata
 venv
 __pycache__
 
-cdrs/postauth/*
-# !cdrs/postauth
-cdrs/loaded/*
-# !cdrs/loaded
+/cdrs/postauth/*
+/cdrs/loaded/*
