@@ -14,8 +14,16 @@ import logging
 # Configure logging to a file
 logging.basicConfig(filename='pyload.log', level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
+def generate_random_string(length: int = 8) -> str:
+    """
+    Generate a random string of specified length.
 
-def generate_random_string(length=8):
+    Parameters:
+    - length (int): The length of the random string. Default is 8.
+
+    Returns:
+    - str: The generated random string.
+    """
     characters = string.ascii_letters + string.digits
     return ''.join(random.choice(characters) for _ in range(length))
 
