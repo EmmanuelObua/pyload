@@ -133,7 +133,8 @@ def clean_transformed_file(transformed_file_path, cleaned_file_path, records_wit
 
 def load_data_to_database(env, cleaned_file_path, table_name):
 	"""Load cleaned transformed files to the database."""
-	command = f"mysql --local-infile -h {env['MYSQL_HOST']} -u {env['MYSQL_USER_NAME']} -p{env['MYSQL_PASSWORD']} -D {env['MYSQL_DATABASE']} -e \"LOAD DATA LOCAL INFILE '{cleaned_file_path.replace('\\', '\\\\')}' INTO TABLE {table_name} FIELDS TERMINATED BY ',' LINES TERMINATED BY '\\n';\""
+	cleaned_file_path = cleaned_file_path.replace('\\', '\\\\')
+	command = f"mysql --local-infile -h {env['MYSQL_HOST']} -u {env['MYSQL_USER_NAME']} -p{env['MYSQL_PASSWORD']} -D {env['MYSQL_DATABASE']} -e \"LOAD DATA LOCAL INFILE '{cleaned_file_path}' INTO TABLE {table_name} FIELDS TERMINATED BY ',' LINES TERMINATED BY '\\n';\""
 	subprocess.run(command, shell=True, check=True, capture_output=True, text=True)
 
 def move_file_to_loaded(zip_file_path, loaded_dir):
