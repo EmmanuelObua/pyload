@@ -1,3 +1,5 @@
+#!C:\Program Files\Python310
+
 import os
 import tempfile
 import shutil
@@ -15,6 +17,7 @@ try:
     print(temp_dir)
 
     folders = list_folders(zipfiles_dir, excluded_folder='loaded')
+    
     for folder in folders:
         folder_files = os.path.abspath(os.path.join(os.path.dirname(__file__), f'cdrs/{folder}'))
 
@@ -34,9 +37,13 @@ try:
             transformed_file_path = os.path.join(temp_dir, f"{random_string_name}.csv")
 
             records_with_prefix = read_and_transform_file(file_path, unzipped_file_name)
-            clean_transformed_file(transformed_file_path, cleaned_file_path, records_with_prefix)
-            load_data_to_database(env, cleaned_file_path, table_name)
-            move_file_to_loaded(zip_file_path, loaded_dir)
+
+            if not records_with_prefix:
+                print("File is empty. Skipping further processing.")
+            else:
+                clean_transformed_file(transformed_file_path, cleaned_file_path, records_with_prefix)
+                load_data_to_database(env, cleaned_file_path, table_name)
+                move_file_to_loaded(zip_file_path, loaded_dir)
 
     # Delete the temp_dir after all the operations are done
     shutil.rmtree(temp_dir)

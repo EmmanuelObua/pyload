@@ -45,7 +45,7 @@ def get_file_info(folder_name: str) -> Tuple[Optional[list], Optional[str]]:
 
 	return info['column_names'], info['table_name']
 
-def process_zip_file(zip_file_path, temp_dir, folder, ext='.zip'):
+def process_zip_file(zip_file_path, temp_dir, folder, ext = '.zip'):
 	"""
 	Process a zip or gzip file, extracting information about column names and table name.
 
@@ -109,7 +109,6 @@ def list_folders(directory_path, excluded_folder):
 	]
 	return folders
 
-
 def read_and_transform_file(file_path, unzipped_file_name):
 	"""Read the content of the file and append unzipped_file_name to each record"""
 	with open(file_path, 'r') as source_file:
@@ -133,7 +132,7 @@ def clean_transformed_file(transformed_file_path, cleaned_file_path, records_wit
 def load_data_to_database(env, cleaned_file_path, table_name):
 	"""Load cleaned transformed files to the database."""
 	cleaned_file_path = cleaned_file_path.replace('\\', '\\\\')
-	command = f"mysql --local-infile -h {env['MYSQL_HOST']} -u {env['MYSQL_USER_NAME']} -p{env['MYSQL_PASSWORD']} -D {env['MYSQL_DATABASE']} -e \"LOAD DATA LOCAL INFILE '{cleaned_file_path}' INTO TABLE {table_name} FIELDS TERMINATED BY ',' LINES TERMINATED BY '\\n';\""
+	command = f"mysql --local-infile -h {env['MYSQL_HOST']} -u {env['MYSQL_USER_NAME']} -p -P {env['MYSQL_PORT']} -D {env['MYSQL_DATABASE']} -e \"LOAD DATA LOCAL INFILE '{cleaned_file_path}' INTO TABLE {table_name} FIELDS TERMINATED BY ',' LINES TERMINATED BY '\\n';\""
 	subprocess.run(command, shell=True, check=True, capture_output=True, text=True)
 
 def move_file_to_loaded(zip_file_path, loaded_dir):
