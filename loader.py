@@ -3,7 +3,6 @@ import gzip
 import csv
 import shutil
 import zipfile
-import tempfile
 import pandas as pd
 import subprocess
 import random
