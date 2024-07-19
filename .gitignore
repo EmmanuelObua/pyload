@@ -6,3 +6,4 @@ __pycache__
 
 /cdrs/postauth/*
 /cdrs/loaded/*
+main.bat

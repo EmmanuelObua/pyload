@@ -9,6 +9,12 @@ import random
 import string
 import constants
 from typing import Tuple, Optional
+import datetime
+from time import time, ctime
+import json
+import requests
+import mysql.connector
+import config as cfg
 
 def generate_random_string(length: int = 8) -> str:
 	"""
@@ -132,10 +138,79 @@ def clean_transformed_file(transformed_file_path, cleaned_file_path, records_wit
 
 def load_data_to_database(env, cleaned_file_path, table_name, column_names, database_name):
 	"""Load cleaned transformed files to the database."""
+
+	connection = mysql.connector.connect(
+	    host = cfg.tMysqlHost,
+	    port = cfg.tMysqlPort,
+	    user = cfg.tMysqlUser,
+	    password = cfg.tMysqlPassword,
+	    database = database_name,
+	    charset='utf8',
+	    allow_local_infile = True
+	)
+
+	cursor = connection.cursor()
+
 	cleaned_file_path = cleaned_file_path.replace('\\', '\\\\')
-	command = f"mysql --local-infile -h {env['MYSQL_HOST']} -u {env['MYSQL_USER_NAME']} -p -P {env['MYSQL_PORT']} -D {database_name} -e \"LOAD DATA LOCAL INFILE '{cleaned_file_path}' INTO TABLE {table_name} FIELDS TERMINATED BY ',' LINES TERMINATED BY '\\n';\""
-	subprocess.run(command, shell=True, check=True, capture_output=True, text=True)
+
+	# command = f"mysql --local-infile -h {env['MYSQL_HOST']} -u {env['MYSQL_USER_NAME']} -p -P {env['MYSQL_PORT']} -D {database_name} -e \"LOAD DATA LOCAL INFILE '{cleaned_file_path}' INTO TABLE {table_name} FIELDS TERMINATED BY ',' LINES TERMINATED BY '\\n';\""
+	# subprocess.run(command, shell=True, check=True, capture_output=True, text=True)
+
+	query = f"LOAD DATA LOCAL INFILE '{cleaned_file_path}' INTO TABLE {table_name} FIELDS TERMINATED BY ',' ENCLOSED BY '\"'"
+
+	write_log("Info:", f"Loading data from {cleaned_file_path} into table {table_name}...")
+
+	cursor.execute(query)
+
+	# Commit the transaction
+	connection.commit()
+
+	write_log("Info:", f"Data loaded successfully from {cleaned_file_path} into table {table_name}.")
+
+	# Close the cursor
+	cursor.close()
 
 def move_file_to_loaded(zip_file_path, loaded_dir):
 	"""Move loaded dataset to the loaded folder."""
 	shutil.move(zip_file_path, loaded_dir)
+
+#create day log file and write to it if it exists write to it
+def write_log(messageType,message):
+    try:
+        today = datetime.date.today()
+        current_date_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        log_file = os.path.join(cfg.logPath, f"bb_general_etl_{today}.log")
+        if not os.path.exists(log_file):
+            with open(log_file, 'w') as f:
+                #write timestamp: message type: message
+                f.write(f"{current_date_time} - {messageType}: {message}")
+        else:
+            with open(log_file, 'a') as f:
+                #write timestamp: message type: message
+                f.write(f"\n{current_date_time} - {messageType}: {message}")
+    except Exception as e:
+        print("Error creating log file:", e)   
+
+def sendEmail(msg):
+	try:
+		conf = cfg.emailConfig
+
+		body = {
+		"Dest": conf['Dest'],
+		"From": conf['From'],
+		"To": conf['To'],
+		"Sub": "Notification: Radius Access Attemps ETL Update",
+		"Msg": (ctime(time()) + " - " + str(msg))
+		}
+
+		headers = {"Content-Type": "application/json"}
+
+		response = requests.post(conf['Url'], data=json.dumps(body), headers=headers,
+			auth=(conf['username'], conf['password']))
+
+		return response
+
+	except Exception as e:
+		print("Error sending email:", e)
+		write_log("Error:", f"Error sending email: {e}")
+		return False

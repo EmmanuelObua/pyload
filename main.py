@@ -5,9 +5,15 @@ import tempfile
 import shutil
 import subprocess
 from dotenv import dotenv_values
-from loader import process_zip_file,list_folders,generate_random_string,read_and_transform_file,clean_transformed_file,load_data_to_database,move_file_to_loaded
+from loader import sendEmail,process_zip_file,list_folders,generate_random_string,read_and_transform_file,clean_transformed_file,load_data_to_database,move_file_to_loaded
 
 env = dotenv_values(".env")
+
+def is_folder_empty(folder):
+    """
+    Check if the specified folder is empty.
+    """
+    return len([file for file in os.listdir(folder) if not file.startswith('.')]) == 0
 
 try:
 	zipfiles_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), 'cdrs'))
@@ -18,31 +24,45 @@ try:
 	print(f'running')
 	
 	for folder in folders:
+
+		success_msg = ''
+		failure_msg = ''
+
+		if(folder == 'postauth'):
+			success_msg = 'Radius access attemps loaded successfully.'
+			failure_msg = 'Radius access attemps loading faild, no files found or processing failed.'
+
 		folder_files = os.path.abspath(os.path.join(os.path.dirname(__file__), f'cdrs/{folder}'))
 
-		for file_name in [file for file in os.listdir(folder_files) if not file.startswith('.')]:
-			
-			random_string_name = generate_random_string()
-			cleaned_file_path = os.path.join(temp_dir, f'{random_string_name}_cleaned_file.csv')
-			transformed_file_path = os.path.join(temp_dir, f"{random_string_name}.csv")
+		if is_folder_empty(folder_files):
+			sendEmail(failure_msg)
+		else:
 
-			zip_file_path = os.path.join(folder_files, file_name)
+			for file_name in [file for file in os.listdir(folder_files) if not file.startswith('.')]:
+				
+				random_string_name = generate_random_string()
+				cleaned_file_path = os.path.join(temp_dir, f'{random_string_name}_cleaned_file.csv')
+				transformed_file_path = os.path.join(temp_dir, f"{random_string_name}.csv")
 
-			if file_name.endswith(".zip"):
-				unzipped_file_name, table_name, column_names, database_name = process_zip_file(zip_file_path, temp_dir, folder, ext='.zip')
-			elif file_name.endswith(".gz"):
-				unzipped_file_name, table_name, column_names, database_name = process_zip_file(zip_file_path, temp_dir, folder, ext='.gz')
+				zip_file_path = os.path.join(folder_files, file_name)
 
-			file_path = os.path.join(temp_dir, unzipped_file_name)
+				if file_name.endswith(".zip"):
+					unzipped_file_name, table_name, column_names, database_name = process_zip_file(zip_file_path, temp_dir, folder, ext='.zip')
+				elif file_name.endswith(".gz"):
+					unzipped_file_name, table_name, column_names, database_name = process_zip_file(zip_file_path, temp_dir, folder, ext='.gz')
 
-			records_with_prefix = read_and_transform_file(file_path, unzipped_file_name)
+				file_path = os.path.join(temp_dir, unzipped_file_name)
 
-			if not records_with_prefix:
-				print("File is empty. Skipping further processing.")
-			else:
-				clean_transformed_file(transformed_file_path, cleaned_file_path, records_with_prefix)
-				load_data_to_database(env, cleaned_file_path, table_name, column_names, database_name)
-				move_file_to_loaded(zip_file_path, loaded_dir)
+				records_with_prefix = read_and_transform_file(file_path, unzipped_file_name)
+
+				if not records_with_prefix:
+					print("File is empty. Skipping further processing.")
+				else:
+					clean_transformed_file(transformed_file_path, cleaned_file_path, records_with_prefix)
+					load_data_to_database(env, cleaned_file_path, table_name, column_names, database_name)
+					move_file_to_loaded(zip_file_path, loaded_dir)
+
+			sendEmail(success_msg)
 
 	# Delete the temp_dir after all the operations are done
 	shutil.rmtree(temp_dir)
@@ -53,3 +73,6 @@ except subprocess.CalledProcessError as e:
 	print("Command Error (if any):")
 	print(e.stderr)
 	print(f"Error: {e}")
+
+	message = 'Radius access attemps loading failed.'
+	sendEmail(message)
