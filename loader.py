@@ -37,13 +37,14 @@ def get_file_info(folder_name: str) -> Tuple[Optional[list], Optional[str]]:
 	file_types_info = {
 		'postauth': {
 			'column_names': constants.postauth,
-			'table_name': 'postauth'
+			'table_name': 'postauth',
+			'database_name': 'radius_data'
 		},
 	}
 
 	info = file_types_info.get(folder_name, {'column_names': None, 'table_name': None})
 
-	return info['column_names'], info['table_name']
+	return info['column_names'], info['table_name'], info['database_name']
 
 def process_zip_file(zip_file_path, temp_dir, folder, ext = '.zip'):
 	"""
@@ -60,7 +61,7 @@ def process_zip_file(zip_file_path, temp_dir, folder, ext = '.zip'):
 	"""
 	try:
 		# Determine the column names and table name for each file
-		column_names, table_name = get_file_info(folder)
+		column_names, table_name, database_name = get_file_info(folder)
 
 		file_name = ''
 
@@ -82,7 +83,7 @@ def process_zip_file(zip_file_path, temp_dir, folder, ext = '.zip'):
 			file_name = os.path.basename(output_file)
 
 		if column_names:
-			return file_name, table_name, column_names
+			return file_name, table_name, column_names, database_name
 		else:
 			print(f"Unknown file type for {file_name}")
 
@@ -129,10 +130,10 @@ def clean_transformed_file(transformed_file_path, cleaned_file_path, records_wit
 	df = df.dropna(axis=1, how='any')
 	df.to_csv(cleaned_file_path, index=False, sep=',')
 
-def load_data_to_database(env, cleaned_file_path, table_name):
+def load_data_to_database(env, cleaned_file_path, table_name, column_names, database_name):
 	"""Load cleaned transformed files to the database."""
 	cleaned_file_path = cleaned_file_path.replace('\\', '\\\\')
-	command = f"mysql --local-infile -h {env['MYSQL_HOST']} -u {env['MYSQL_USER_NAME']} -p -P {env['MYSQL_PORT']} -D {env['MYSQL_DATABASE']} -e \"LOAD DATA LOCAL INFILE '{cleaned_file_path}' INTO TABLE {table_name} FIELDS TERMINATED BY ',' LINES TERMINATED BY '\\n';\""
+	command = f"mysql --local-infile -h {env['MYSQL_HOST']} -u {env['MYSQL_USER_NAME']} -p -P {env['MYSQL_PORT']} -D {database_name} -e \"LOAD DATA LOCAL INFILE '{cleaned_file_path}' INTO TABLE {table_name} FIELDS TERMINATED BY ',' LINES TERMINATED BY '\\n';\""
 	subprocess.run(command, shell=True, check=True, capture_output=True, text=True)
 
 def move_file_to_loaded(zip_file_path, loaded_dir):
