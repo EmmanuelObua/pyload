@@ -29,14 +29,17 @@ try:
 		failure_msg = ''
 
 		if(folder == 'postauth'):
-			success_msg = 'Radius access attemps loaded successfully.'
-			failure_msg = 'Radius access attemps loading faild, no files found or processing failed.'
+			success_msg = 'Radius access attemps ETL loaded successfully.'
+			failure_msg = 'Radius access attemps ETL loading failed, no files found or processing failed.'
 
 		folder_files = os.path.abspath(os.path.join(os.path.dirname(__file__), f'cdrs/{folder}'))
 
 		if is_folder_empty(folder_files):
 			sendEmail(failure_msg)
 		else:
+
+			file_count = 0
+			record_count = 0
 
 			for file_name in [file for file in os.listdir(folder_files) if not file.startswith('.')]:
 				
@@ -55,6 +58,9 @@ try:
 
 				records_with_prefix = read_and_transform_file(file_path, unzipped_file_name)
 
+				file_count += 1
+				record_count += len(records_with_prefix)
+
 				if not records_with_prefix:
 					print("File is empty. Skipping further processing.")
 				else:
@@ -62,7 +68,7 @@ try:
 					load_data_to_database(env, cleaned_file_path, table_name, column_names, database_name)
 					move_file_to_loaded(zip_file_path, loaded_dir)
 
-			sendEmail(success_msg)
+			sendEmail(success_msg + f' {file_count:,} files and {record_count:,} records loaded.')
 
 	# Delete the temp_dir after all the operations are done
 	shutil.rmtree(temp_dir)
@@ -74,5 +80,5 @@ except subprocess.CalledProcessError as e:
 	print(e.stderr)
 	print(f"Error: {e}")
 
-	message = 'Radius access attemps loading failed.'
+	message = 'Radius access attemps ETL loading failed with an Exception.'
 	sendEmail(message)

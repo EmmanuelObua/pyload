@@ -118,9 +118,16 @@ def list_folders(directory_path, excluded_folder):
 
 def read_and_transform_file(file_path, unzipped_file_name):
 	"""Read the content of the file and append unzipped_file_name to each record"""
+
+	# Remove '_postauth.txt' to get the date string
+	date_str = unzipped_file_name.replace('_postauth.txt', '')
+
+	# Format the date string to 'YYYY-MM-DD'
+	processed_date = f"{date_str[:4]}-{date_str[4:6]}-{date_str[6:]}"
+
 	with open(file_path, 'r') as source_file:
 		records = source_file.readlines()[1:]
-		records_with_prefix = [f"{unzipped_file_name}|{record.rstrip()}" for record in records]
+		records_with_prefix = [f"{unzipped_file_name}|{record.rstrip()}|{processed_date}" for record in records]
 
 	return records_with_prefix
 
@@ -140,13 +147,13 @@ def load_data_to_database(env, cleaned_file_path, table_name, column_names, data
 	"""Load cleaned transformed files to the database."""
 
 	connection = mysql.connector.connect(
-	    host = cfg.tMysqlHost,
-	    port = cfg.tMysqlPort,
-	    user = cfg.tMysqlUser,
-	    password = cfg.tMysqlPassword,
-	    database = database_name,
-	    charset='utf8',
-	    allow_local_infile = True
+		host = cfg.tMysqlHost,
+		port = cfg.tMysqlPort,
+		user = cfg.tMysqlUser,
+		password = cfg.tMysqlPassword,
+		database = database_name,
+		charset='utf8',
+		allow_local_infile = True
 	)
 
 	cursor = connection.cursor()
@@ -176,20 +183,20 @@ def move_file_to_loaded(zip_file_path, loaded_dir):
 
 #create day log file and write to it if it exists write to it
 def write_log(messageType,message):
-    try:
-        today = datetime.date.today()
-        current_date_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        log_file = os.path.join(cfg.logPath, f"bb_general_etl_{today}.log")
-        if not os.path.exists(log_file):
-            with open(log_file, 'w') as f:
-                #write timestamp: message type: message
-                f.write(f"{current_date_time} - {messageType}: {message}")
-        else:
-            with open(log_file, 'a') as f:
-                #write timestamp: message type: message
-                f.write(f"\n{current_date_time} - {messageType}: {message}")
-    except Exception as e:
-        print("Error creating log file:", e)   
+	try:
+		today = datetime.date.today()
+		current_date_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+		log_file = os.path.join(cfg.logPath, f"bb_general_etl_{today}.log")
+		if not os.path.exists(log_file):
+			with open(log_file, 'w') as f:
+				#write timestamp: message type: message
+				f.write(f"{current_date_time} - {messageType}: {message}")
+		else:
+			with open(log_file, 'a') as f:
+				#write timestamp: message type: message
+				f.write(f"\n{current_date_time} - {messageType}: {message}")
+	except Exception as e:
+		print("Error creating log file:", e)   
 
 def sendEmail(msg):
 	try:
@@ -199,6 +206,7 @@ def sendEmail(msg):
 		"Dest": conf['Dest'],
 		"From": conf['From'],
 		"To": conf['To'],
+		"Cc": conf['Cc'],
 		"Sub": "Notification: Radius Access Attemps ETL Update",
 		"Msg": (ctime(time()) + " - " + str(msg))
 		}
