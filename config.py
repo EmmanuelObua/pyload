@@ -20,8 +20,8 @@ emailConfig = {
     "Url": "http://utlhq407:9192/api/Email",
     "Dest": "ToCc",
     "From": " data.pipeline@utcl.co.ug",
-    "To": "dl-bi_va@utcl.co.ug",
-    "Cc": "james.kamjya@utcl.co.ug",
+    "To": "dl-bi_vas@utcl.co.ug",
+    "Cc": "james.kamya@utcl.co.ug",
     "username": "VasApp",
     "password": "VasDev@1234"
 }

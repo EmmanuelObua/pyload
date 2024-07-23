@@ -198,7 +198,7 @@ def write_log(messageType,message):
 	except Exception as e:
 		print("Error creating log file:", e)   
 
-def sendEmail(msg):
+def sendEmail(msg, Cc = True):
 	try:
 		conf = cfg.emailConfig
 
@@ -206,10 +206,12 @@ def sendEmail(msg):
 		"Dest": conf['Dest'],
 		"From": conf['From'],
 		"To": conf['To'],
-		"Cc": conf['Cc'],
 		"Sub": "Notification: Radius Access Attemps ETL Update",
 		"Msg": (ctime(time()) + " - " + str(msg))
 		}
+
+		if Cc:
+			body["Cc"] = conf['Cc']
 
 		headers = {"Content-Type": "application/json"}
 
