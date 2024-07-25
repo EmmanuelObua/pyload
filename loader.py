@@ -206,7 +206,7 @@ def sendEmail(msg, Cc = True):
 		"Dest": conf['Dest'],
 		"From": conf['From'],
 		"To": conf['To'],
-		"Sub": "Notification: Radius Access Attemps ETL Update",
+		"Sub": "Notification: Radius Access Attempts ETL Update",
 		"Msg": (ctime(time()) + " - " + str(msg))
 		}
 
